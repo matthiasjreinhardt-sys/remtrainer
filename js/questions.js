@@ -13,6 +13,24 @@ Game.Questions = {
     return arr[Math.floor(Math.random() * arr.length)];
   },
 
+  // Liefert eine zufaellig gemischte Kopie von arr (Fisher-Yates), laesst
+  // das Original unveraendert.
+  shuffle(arr) {
+    const copy = arr.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  },
+
+  // Waehlt n zufaellige, unterschiedliche Eintraege aus pool (ohne
+  // Zuruecklegen). Ist n >= pool.length, wird der ganze Pool gemischt
+  // zurueckgegeben.
+  sampleWithoutReplacement(pool, n) {
+    return this.shuffle(pool).slice(0, n);
+  },
+
   round2(n) {
     return Math.round(n * 100) / 100;
   },

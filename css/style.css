@@ -287,6 +287,24 @@ button.secondary {
   color: var(--text);
 }
 
+.code-prompt {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+}
+
+.code-block {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  margin: 0 0 18px;
+  color: var(--text);
+}
+
 canvas.graph-canvas {
   background: var(--panel-2);
   border-radius: 8px;
@@ -424,7 +442,8 @@ canvas.graph-canvas {
   color: var(--muted);
 }
 
-.create-form input {
+.create-form input,
+.create-form select {
   font: inherit;
   padding: 10px 12px;
   border-radius: 8px;

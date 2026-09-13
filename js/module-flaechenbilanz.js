@@ -7,6 +7,7 @@ Game.modules = Game.modules || {};
 Game.modules.flaechenbilanz = {
   id: "flaechenbilanz",
   title: "Q13 - Integral - Flächenbilanz",
+  subjectTrack: "mathe-13",
   description:
     "Bestimme Integrale als Summe vorzeichenbehafteter Flächen zwischen Graph und x-Achse.",
   levels: [

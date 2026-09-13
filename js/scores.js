@@ -14,6 +14,7 @@ Game.Scores = {
       disabled: !!(data && data.disabled),
       nickname: (data && data.nickname) || "",
       course: (data && data.course) || null,
+      subjectTrack: (data && data.subjectTrack) || null,
       username: (data && data.username) || "",
     };
   },
@@ -31,6 +32,10 @@ Game.Scores = {
 
   setCourse(uid, course) {
     return firebase.firestore().collection("scores").doc(uid).set({ course }, { merge: true });
+  },
+
+  setSubjectTrack(uid, subjectTrack) {
+    return firebase.firestore().collection("scores").doc(uid).set({ subjectTrack }, { merge: true });
   },
 
   // Top-Platzierungen eines Kurses nach Anzahl richtiger Antworten.

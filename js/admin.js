@@ -69,6 +69,12 @@ function renderDashboard() {
       <h2>Neue Zugänge erzeugen</h2>
       <form id="create-form" class="create-form">
         <label>Kurs<input type="text" id="create-course" placeholder="z.B. 12a" required /></label>
+        <label>Fach-Jahrgangsstufe
+          <select id="create-subject-track" required>
+            <option value="" disabled selected>Bitte wählen…</option>
+            ${Game.subjectTracks.map((t) => `<option value="${t.id}">${t.label}</option>`).join("")}
+          </select>
+        </label>
         <label>Anzahl<input type="number" id="create-count" min="1" max="100" value="10" /></label>
         <button type="submit">Konten erzeugen</button>
       </form>
@@ -146,6 +152,11 @@ async function refreshRoster() {
   renderRosterTable();
 }
 
+function subjectTrackLabel(id) {
+  const track = Game.subjectTracks.find((t) => t.id === id);
+  return track ? track.label : "–";
+}
+
 function renderRosterTable() {
   const tableContainer = document.getElementById("roster-table-container");
   const roster = courseFilter ? rosterCache.filter((r) => r.course === courseFilter) : rosterCache;
@@ -159,6 +170,7 @@ function renderRosterTable() {
           <thead>
             <tr>
               <th>Kurs</th>
+              <th>Fach-Jahrgangsstufe</th>
               <th>Benutzername</th>
               <th>Nickname</th>
               <th>Richtig/Gesamt</th>
@@ -173,6 +185,10 @@ function renderRosterTable() {
                 (r) => `
               <tr>
                 <td>${r.course || "–"} <button class="secondary small" data-edit-course="${r.uid}" data-current="${r.course || ""}">✏️</button></td>
+                <td id="subject-track-cell-${r.uid}">
+                  ${subjectTrackLabel(r.subjectTrack)}
+                  <button class="secondary small" data-edit-subject="${r.uid}" data-current="${r.subjectTrack || ""}">✏️</button>
+                </td>
                 <td>${r.username || "unbekannt"}</td>
                 <td>${r.nickname || "–"}</td>
                 <td>${r.correct || 0}/${r.total || 0}</td>
@@ -191,7 +207,7 @@ function renderRosterTable() {
                 </td>
               </tr>
               <tr class="history-row" id="history-row-${r.uid}" style="display:none">
-                <td colspan="7"><div class="history-content" id="history-content-${r.uid}"></div></td>
+                <td colspan="8"><div class="history-content" id="history-content-${r.uid}"></div></td>
               </tr>
             `
               )
@@ -245,6 +261,7 @@ function wireCreateForm() {
     e.preventDefault();
     const count = Math.max(1, Math.min(100, parseInt(document.getElementById("create-count").value, 10) || 1));
     const course = document.getElementById("create-course").value.trim();
+    const subjectTrack = document.getElementById("create-subject-track").value;
     const submitBtn = form.querySelector("button");
     submitBtn.disabled = true;
     statusEl.classList.remove("wrong");
@@ -258,7 +275,7 @@ function wireCreateForm() {
       const usedNames = new Set(existing.map((r) => r.username));
       for (let i = 0; i < count; i++) {
         statusEl.textContent = `Erzeuge Konto ${i + 1}/${count}…`;
-        const account = await createOneAccount(usedNames, course);
+        const account = await createOneAccount(usedNames, course, subjectTrack);
         usedNames.add(account.username);
         created.push(account);
       }
@@ -308,7 +325,7 @@ function printAccountCards(course, accounts) {
 
 // Legt ein einzelnes Konto ueber eine zweite, isolierte Firebase-App-Instanz
 // an, damit die eigentliche Admin-Anmeldung (Default-App) unberuehrt bleibt.
-async function createOneAccount(usedNames, course) {
+async function createOneAccount(usedNames, course, subjectTrack) {
   let username;
   do {
     username = Game.Auth.randomUsername();
@@ -323,6 +340,7 @@ async function createOneAccount(usedNames, course) {
     await firebase.firestore().collection("scores").doc(cred.user.uid).set({
       username,
       course,
+      subjectTrack,
       correct: 0,
       total: 0,
     });
@@ -353,6 +371,31 @@ function wireRosterActions() {
       btn.disabled = true;
       await Game.Scores.setCourse(uid, next.trim());
       refreshRoster();
+    });
+  });
+
+  appEl.querySelectorAll("[data-edit-subject]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const uid = btn.dataset.editSubject;
+      const current = btn.dataset.current;
+      const cell = document.getElementById(`subject-track-cell-${uid}`);
+      cell.innerHTML = `
+        <select data-subject-select="${uid}">
+          ${Game.subjectTracks
+            .map((t) => `<option value="${t.id}" ${t.id === current ? "selected" : ""}>${t.label}</option>`)
+            .join("")}
+        </select>
+      `;
+      const select = cell.querySelector("select");
+      select.focus();
+      select.addEventListener("change", async () => {
+        select.disabled = true;
+        await Game.Scores.setSubjectTrack(uid, select.value);
+        refreshRoster();
+      });
+      select.addEventListener("blur", () => {
+        if (select.value === current) refreshRoster();
+      });
     });
   });
 

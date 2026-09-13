@@ -15,6 +15,7 @@ Game.state = {
   sessionTotal: 0,
   nickname: "",
   course: null,
+  subjectTrack: null,
 };
 
 const appEl = document.getElementById("app");
@@ -88,7 +89,7 @@ function renderLogin() {
 }
 
 function renderStart() {
-  const modules = Object.values(Game.modules);
+  const modules = Object.values(Game.modules).filter((m) => m.subjectTrack === Game.state.subjectTrack);
   appEl.innerHTML = `
     <div class="admin-panel my-score-panel">
       <p class="my-score-label">Deine aktuelle Punktzahl</p>
@@ -117,6 +118,10 @@ function renderStart() {
     }
 
     <h2>Modul wählen</h2>
+    ${
+      modules.length === 0
+        ? `<p>Für dein Konto ist noch kein Modul verfügbar. Bitte wende dich an deine Lehrkraft (fehlende Fach-Jahrgangsstufen-Zuordnung).</p>`
+        : `
     <div class="module-grid">
       ${modules
         .map(
@@ -129,6 +134,8 @@ function renderStart() {
         )
         .join("")}
     </div>
+    `
+    }
   `;
   appEl.querySelectorAll("[data-module]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -195,6 +202,10 @@ async function loadHighscore() {
 
 function renderLevels() {
   const mod = Game.modules[Game.state.moduleId];
+  if (!mod || mod.subjectTrack !== Game.state.subjectTrack) {
+    Game.state.screen = "start";
+    return renderStart();
+  }
   appEl.innerHTML = `
     <button class="secondary" id="back-start">&larr; Zurück</button>
     <h2>${mod.title}</h2>
@@ -249,20 +260,7 @@ function renderQuiz() {
       <span>Frage ${index + 1} / ${questions.length}</span>
     </div>
     <div class="quiz-panel">
-      <div class="func-label">${q.funcObj.label}</div>
-      <div class="bounds-label">
-        <span class="integral-symbol">&int;</span>
-        <span class="integral-bounds">
-          <span class="integral-upper">${formatNum(q.b)}</span>
-          <span class="integral-lower">${formatNum(q.a)}</span>
-        </span>
-        <span class="integral-integrand">f(x)&nbsp;dx</span>
-      </div>
-      <canvas class="graph-canvas" id="quiz-canvas"></canvas>
-      <div class="legend">
-        <span class="above">Fläche oberhalb x-Achse (positiv)</span>
-        <span class="below">Fläche unterhalb x-Achse (negativ)</span>
-      </div>
+      ${q.kind === "code" ? renderCodeQuestion(q) : renderIntegralQuestion(q)}
       ${q.mode === "mc" ? renderMcOptions(q) : renderNumericInput()}
       <div class="feedback" id="feedback"></div>
       <div class="quiz-actions">
@@ -273,8 +271,10 @@ function renderQuiz() {
     </div>
   `;
 
-  const canvas = document.getElementById("quiz-canvas");
-  Game.Graph.draw(canvas, q.funcObj, q.a, q.b);
+  if (q.kind !== "code") {
+    const canvas = document.getElementById("quiz-canvas");
+    Game.Graph.draw(canvas, q.funcObj, q.a, q.b);
+  }
 
   if (q.mode === "mc") wireMcOptions(q);
   else wireNumericInput(q);
@@ -282,11 +282,48 @@ function renderQuiz() {
   document.getElementById("next-btn").addEventListener("click", nextQuestion);
 }
 
+function renderIntegralQuestion(q) {
+  return `
+    <div class="func-label">${q.funcObj.label}</div>
+    <div class="bounds-label">
+      <span class="integral-symbol">&int;</span>
+      <span class="integral-bounds">
+        <span class="integral-upper">${formatNum(q.b)}</span>
+        <span class="integral-lower">${formatNum(q.a)}</span>
+      </span>
+      <span class="integral-integrand">f(x)&nbsp;dx</span>
+    </div>
+    <canvas class="graph-canvas" id="quiz-canvas"></canvas>
+    <div class="legend">
+      <span class="above">Fläche oberhalb x-Achse (positiv)</span>
+      <span class="below">Fläche unterhalb x-Achse (negativ)</span>
+    </div>
+  `;
+}
+
+function renderCodeQuestion(q) {
+  return `
+    <p class="code-prompt">${escapeHtml(q.prompt)}</p>
+    ${q.code ? `<pre class="code-block"><code>${escapeHtml(q.code)}</code></pre>` : ""}
+  `;
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function renderMcOptions(q) {
   return `
     <div class="mc-options">
       ${q.options
-        .map((opt, i) => `<button data-index="${i}">${formatNum(opt.value)} FE</button>`)
+        .map((opt, i) => {
+          const label = q.kind === "code" ? escapeHtml(opt.value) : `${formatNum(opt.value)} FE`;
+          return `<button data-index="${i}">${label}</button>`;
+        })
         .join("")}
     </div>
   `;
@@ -357,11 +394,19 @@ function answerQuestion(isCorrect, q) {
 
   const feedback = document.getElementById("feedback");
   feedback.classList.add("show", isCorrect ? "correct" : "wrong");
-  feedback.textContent = isCorrect
-    ? `Richtig! ∫ = F(b) − F(a) = ${formatNum(q.correctValue)} FE`
-    : `Leider falsch. Richtig wäre: ∫ = F(b) − F(a) = ${formatNum(q.correctValue)} FE`;
+  feedback.textContent = buildFeedbackText(isCorrect, q);
 
   document.getElementById("next-btn").disabled = false;
+}
+
+function buildFeedbackText(isCorrect, q) {
+  if (q.kind === "code") {
+    const correctOption = q.options.find((o) => o.correct);
+    return isCorrect ? "Richtig!" : `Leider falsch. Richtig wäre: ${correctOption.value}`;
+  }
+  return isCorrect
+    ? `Richtig! ∫ = F(b) − F(a) = ${formatNum(q.correctValue)} FE`
+    : `Leider falsch. Richtig wäre: ∫ = F(b) − F(a) = ${formatNum(q.correctValue)} FE`;
 }
 
 function nextQuestion() {
@@ -425,6 +470,7 @@ Game.Auth.onReady(async (user) => {
     Game.state.sessionTotal = agg.total;
     Game.state.nickname = agg.nickname;
     Game.state.course = agg.course;
+    Game.state.subjectTrack = agg.subjectTrack;
     if (!agg.username) {
       Game.Scores.ensureUsername(user.uid, user.email.split("@")[0]).catch(() => {});
     }
