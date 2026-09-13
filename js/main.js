@@ -100,7 +100,7 @@ function renderStart() {
     <div class="nickname-row">
       <form id="nickname-form" class="nickname-form">
         <label>Anzeigename für die Bestenliste
-          <input type="text" id="nickname-input" maxlength="20" placeholder="z.B. MathePanda" value="${Game.state.nickname || ""}" />
+          <input type="text" id="nickname-input" maxlength="20" placeholder="z.B. CleverFuchs" value="${Game.state.nickname || ""}" />
         </label>
         <button type="submit" class="secondary">Speichern</button>
       </form>
@@ -426,7 +426,7 @@ function renderSummary() {
   );
   const pct = Math.round((correctCount / total) * 100);
   let message;
-  if (pct >= 80) message = "Stark! Du beherrschst die Flächenbilanz.";
+  if (pct >= 80) message = "Stark! Das sitzt.";
   else if (pct >= 50) message = "Gut gemacht, mit etwas Übung wird's noch besser.";
   else message = "Übung macht den Meister – versuch's noch einmal.";
 
