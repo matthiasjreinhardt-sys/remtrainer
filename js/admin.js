@@ -69,12 +69,18 @@ function renderDashboard() {
       <h2>Neue Zugänge erzeugen</h2>
       <form id="create-form" class="create-form">
         <label>Kurs<input type="text" id="create-course" placeholder="z.B. 12a" required /></label>
-        <label>Fach-Jahrgangsstufe
-          <select id="create-subject-track" required>
-            <option value="" disabled selected>Bitte wählen…</option>
-            ${Game.subjectTracks.map((t) => `<option value="${t.id}">${t.label}</option>`).join("")}
-          </select>
-        </label>
+        <fieldset class="subject-track-picker">
+          <legend>Fach-Jahrgangsstufe(n)</legend>
+          ${Game.subjectTracks
+            .map(
+              (t) => `
+            <label class="subject-track-option">
+              <input type="checkbox" name="create-subject-track" value="${t.id}" />
+              ${t.label}
+            </label>`
+            )
+            .join("")}
+        </fieldset>
         <label>Anzahl<input type="number" id="create-count" min="1" max="100" value="10" /></label>
         <button type="submit">Konten erzeugen</button>
       </form>
@@ -152,9 +158,9 @@ async function refreshRoster() {
   renderRosterTable();
 }
 
-function subjectTrackLabel(id) {
-  const track = Game.subjectTracks.find((t) => t.id === id);
-  return track ? track.label : "–";
+function subjectTracksLabel(ids) {
+  if (!ids || ids.length === 0) return "–";
+  return ids.map((id) => Game.subjectTracks.find((t) => t.id === id)?.label || id).join(", ");
 }
 
 function renderRosterTable() {
@@ -186,8 +192,8 @@ function renderRosterTable() {
               <tr>
                 <td>${r.course || "–"} <button class="secondary small" data-edit-course="${r.uid}" data-current="${r.course || ""}">✏️</button></td>
                 <td id="subject-track-cell-${r.uid}">
-                  ${subjectTrackLabel(r.subjectTrack)}
-                  <button class="secondary small" data-edit-subject="${r.uid}" data-current="${r.subjectTrack || ""}">✏️</button>
+                  ${subjectTracksLabel(Game.Scores.getSubjectTracks(r))}
+                  <button class="secondary small" data-edit-subject="${r.uid}">✏️</button>
                 </td>
                 <td>${r.username || "unbekannt"}</td>
                 <td>${r.nickname || "–"}</td>
@@ -261,8 +267,17 @@ function wireCreateForm() {
     e.preventDefault();
     const count = Math.max(1, Math.min(100, parseInt(document.getElementById("create-count").value, 10) || 1));
     const course = document.getElementById("create-course").value.trim();
-    const subjectTrack = document.getElementById("create-subject-track").value;
+    const subjectTracks = Array.from(
+      form.querySelectorAll('input[name="create-subject-track"]:checked')
+    ).map((cb) => cb.value);
     const submitBtn = form.querySelector("button");
+
+    if (subjectTracks.length === 0) {
+      statusEl.classList.add("wrong", "show");
+      statusEl.textContent = "Bitte mindestens eine Fach-Jahrgangsstufe auswählen.";
+      return;
+    }
+
     submitBtn.disabled = true;
     statusEl.classList.remove("wrong");
     statusEl.classList.add("show");
@@ -275,7 +290,7 @@ function wireCreateForm() {
       const usedNames = new Set(existing.map((r) => r.username));
       for (let i = 0; i < count; i++) {
         statusEl.textContent = `Erzeuge Konto ${i + 1}/${count}…`;
-        const account = await createOneAccount(usedNames, course, subjectTrack);
+        const account = await createOneAccount(usedNames, course, subjectTracks);
         usedNames.add(account.username);
         created.push(account);
       }
@@ -325,7 +340,7 @@ function printAccountCards(course, accounts) {
 
 // Legt ein einzelnes Konto ueber eine zweite, isolierte Firebase-App-Instanz
 // an, damit die eigentliche Admin-Anmeldung (Default-App) unberuehrt bleibt.
-async function createOneAccount(usedNames, course, subjectTrack) {
+async function createOneAccount(usedNames, course, subjectTracks) {
   let username;
   do {
     username = Game.Auth.randomUsername();
@@ -340,7 +355,7 @@ async function createOneAccount(usedNames, course, subjectTrack) {
     await firebase.firestore().collection("scores").doc(cred.user.uid).set({
       username,
       course,
-      subjectTrack,
+      subjectTracks,
       correct: 0,
       total: 0,
     });
@@ -377,24 +392,29 @@ function wireRosterActions() {
   appEl.querySelectorAll("[data-edit-subject]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const uid = btn.dataset.editSubject;
-      const current = btn.dataset.current;
+      const row = rosterCache.find((r) => r.uid === uid);
+      const current = Game.Scores.getSubjectTracks(row);
       const cell = document.getElementById(`subject-track-cell-${uid}`);
       cell.innerHTML = `
-        <select data-subject-select="${uid}">
+        <div class="subject-track-edit">
           ${Game.subjectTracks
-            .map((t) => `<option value="${t.id}" ${t.id === current ? "selected" : ""}>${t.label}</option>`)
+            .map(
+              (t) => `
+            <label class="subject-track-option">
+              <input type="checkbox" value="${t.id}" ${current.includes(t.id) ? "checked" : ""} />
+              ${t.label}
+            </label>`
+            )
             .join("")}
-        </select>
+          <button type="button" class="secondary small" data-save-subject="${uid}">Speichern</button>
+        </div>
       `;
-      const select = cell.querySelector("select");
-      select.focus();
-      select.addEventListener("change", async () => {
-        select.disabled = true;
-        await Game.Scores.setSubjectTrack(uid, select.value);
+      cell.querySelector("[data-save-subject]").addEventListener("click", async () => {
+        const selected = Array.from(cell.querySelectorAll("input[type=checkbox]:checked")).map(
+          (cb) => cb.value
+        );
+        await Game.Scores.setSubjectTracks(uid, selected);
         refreshRoster();
-      });
-      select.addEventListener("blur", () => {
-        if (select.value === current) refreshRoster();
       });
     });
   });

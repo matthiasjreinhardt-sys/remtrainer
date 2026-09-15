@@ -15,7 +15,7 @@ Game.state = {
   sessionTotal: 0,
   nickname: "",
   course: null,
-  subjectTrack: null,
+  subjectTracks: [],
 };
 
 const appEl = document.getElementById("app");
@@ -89,7 +89,7 @@ function renderLogin() {
 }
 
 function renderStart() {
-  const modules = Object.values(Game.modules).filter((m) => m.subjectTrack === Game.state.subjectTrack);
+  const modules = Object.values(Game.modules).filter((m) => Game.state.subjectTracks.includes(m.subjectTrack));
   appEl.innerHTML = `
     <div class="admin-panel my-score-panel">
       <p class="my-score-label">Deine aktuelle Punktzahl</p>
@@ -202,7 +202,7 @@ async function loadHighscore() {
 
 function renderLevels() {
   const mod = Game.modules[Game.state.moduleId];
-  if (!mod || mod.subjectTrack !== Game.state.subjectTrack) {
+  if (!mod || !Game.state.subjectTracks.includes(mod.subjectTrack)) {
     Game.state.screen = "start";
     return renderStart();
   }
@@ -470,7 +470,7 @@ Game.Auth.onReady(async (user) => {
     Game.state.sessionTotal = agg.total;
     Game.state.nickname = agg.nickname;
     Game.state.course = agg.course;
-    Game.state.subjectTrack = agg.subjectTrack;
+    Game.state.subjectTracks = agg.subjectTracks;
     if (!agg.username) {
       Game.Scores.ensureUsername(user.uid, user.email.split("@")[0]).catch(() => {});
     }

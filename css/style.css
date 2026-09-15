@@ -452,6 +452,37 @@ canvas.graph-canvas {
   color: var(--text);
 }
 
+.subject-track-picker {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.subject-track-picker legend {
+  padding: 0 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.subject-track-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.subject-track-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
 .create-result-box {
   margin-top: 16px;
   border: 1px solid var(--accent-2);

@@ -5,6 +5,18 @@
 window.Game = window.Game || {};
 
 Game.Scores = {
+  // Ein Konto kann mehreren Fach-Jahrgangsstufen zugeordnet sein (z.B. eine
+  // Klasse, die bei derselben Lehrkraft sowohl Physik als auch Informatik
+  // hat). Neue Dokumente speichern das Array "subjectTracks". Aeltere
+  // Dokumente haben noch das einzelne Feld "subjectTrack" - wird hier
+  // automatisch in ein einelementiges Array umgewandelt, ohne dass die
+  // bestehenden Konten manuell migriert werden muessen.
+  getSubjectTracks(data) {
+    if (data && Array.isArray(data.subjectTracks)) return data.subjectTracks;
+    if (data && data.subjectTrack) return [data.subjectTrack];
+    return [];
+  },
+
   async loadAggregate(uid) {
     const doc = await firebase.firestore().collection("scores").doc(uid).get();
     const data = doc.data();
@@ -14,7 +26,7 @@ Game.Scores = {
       disabled: !!(data && data.disabled),
       nickname: (data && data.nickname) || "",
       course: (data && data.course) || null,
-      subjectTrack: (data && data.subjectTrack) || null,
+      subjectTracks: this.getSubjectTracks(data),
       username: (data && data.username) || "",
     };
   },
@@ -34,8 +46,18 @@ Game.Scores = {
     return firebase.firestore().collection("scores").doc(uid).set({ course }, { merge: true });
   },
 
-  setSubjectTrack(uid, subjectTrack) {
-    return firebase.firestore().collection("scores").doc(uid).set({ subjectTrack }, { merge: true });
+  // Ersetzt die Fach-Jahrgangsstufen-Zuordnung komplett durch subjectTracks
+  // (Array von IDs) und entfernt das alte einzelne Feld, damit ein Konto
+  // nicht gleichzeitig beide Varianten fuehrt.
+  setSubjectTracks(uid, subjectTracks) {
+    return firebase
+      .firestore()
+      .collection("scores")
+      .doc(uid)
+      .set(
+        { subjectTracks, subjectTrack: firebase.firestore.FieldValue.delete() },
+        { merge: true }
+      );
   },
 
   // Top-Platzierungen eines Kurses nach Anzahl richtiger Antworten.

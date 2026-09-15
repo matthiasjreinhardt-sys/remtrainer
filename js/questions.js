@@ -35,6 +35,39 @@ Game.Questions = {
     return Math.round(n * 100) / 100;
   },
 
+  // Zufaellige Dezimalzahl zwischen min und max mit fester Nachkommastellenzahl.
+  randomDecimal(min, max, decimals = 1) {
+    const factor = 10 ** decimals;
+    return Math.round((min + Math.random() * (max - min)) * factor) / factor;
+  },
+
+  // Baut aus einem korrekten Wert und inhaltlich sinnvollen Distraktor-
+  // Kandidaten (typische Formelfehler, z.B. Faktor vergessen/vertauscht)
+  // 4 eindeutige, gerundete Antwortoptionen. Reicht die Kandidatenliste
+  // nicht fuer 4 eindeutige Werte, wird mit zufaelligen Werten aufgefuellt.
+  buildOptionsFromCandidates(correctValue, decimals, preferredDistractors) {
+    const factor = 10 ** decimals;
+    const round = (n) => Math.round(n * factor) / factor;
+    const correct = round(correctValue);
+    const minGap = Math.max(Math.abs(correct) * 0.02, 1 / factor);
+    const values = [correct];
+
+    for (const c of this.shuffle(preferredDistractors)) {
+      if (values.length >= 4) break;
+      const rc = round(c);
+      if (values.every((v) => Math.abs(v - rc) > minGap)) values.push(rc);
+    }
+    let guard = 0;
+    while (values.length < 4 && guard < 20) {
+      const rc = round(correctValue * (0.5 + Math.random() * 1.5));
+      if (values.every((v) => Math.abs(v - rc) > minGap)) values.push(rc);
+      guard++;
+    }
+
+    const options = values.map((v) => ({ value: v, correct: v === correct }));
+    return this.shuffle(options);
+  },
+
   // Waehlt Integrationsgrenzen a < b. Funktionen mit "niceBounds" (z.B. sin)
   // bekommen Grenzen aus dieser Liste, damit F(a)/F(b) schoene Werte ergeben.
   // Sonst werden ganzzahlige Grenzen innerhalb des Definitionsbereichs gewaehlt.
