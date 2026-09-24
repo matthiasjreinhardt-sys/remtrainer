@@ -260,7 +260,7 @@ function renderQuiz() {
       <span>Frage ${index + 1} / ${questions.length}</span>
     </div>
     <div class="quiz-panel">
-      ${q.kind === "code" ? renderCodeQuestion(q) : renderIntegralQuestion(q)}
+      ${q.kind === "code" ? renderCodeQuestion(q) : q.kind === "graph" ? renderGraphQuestion(q) : renderIntegralQuestion(q)}
       ${q.mode === "mc" ? renderMcOptions(q) : renderNumericInput()}
       <div class="feedback" id="feedback"></div>
       <div class="quiz-actions">
@@ -301,6 +301,17 @@ function renderIntegralQuestion(q) {
   `;
 }
 
+function renderGraphQuestion(q) {
+  return `
+    <p class="code-prompt">${escapeHtml(q.prompt)}</p>
+    <canvas class="graph-canvas" id="quiz-canvas"></canvas>
+    <div class="legend">
+      <span class="above">Fläche oberhalb x-Achse (positiv)</span>
+      <span class="below">Fläche unterhalb x-Achse (negativ)</span>
+    </div>
+  `;
+}
+
 function renderCodeQuestion(q) {
   return `
     <p class="code-prompt">${escapeHtml(q.prompt)}</p>
@@ -321,7 +332,8 @@ function renderMcOptions(q) {
     <div class="mc-options">
       ${q.options
         .map((opt, i) => {
-          const label = q.kind === "code" ? escapeHtml(opt.value) : `${formatNum(opt.value)} FE`;
+          const label =
+            q.kind === "code" || q.kind === "graph" ? escapeHtml(opt.value) : `${formatNum(opt.value)} FE`;
           return `<button data-index="${i}">${label}</button>`;
         })
         .join("")}
@@ -400,7 +412,7 @@ function answerQuestion(isCorrect, q) {
 }
 
 function buildFeedbackText(isCorrect, q) {
-  if (q.kind === "code") {
+  if (q.kind === "code" || q.kind === "graph") {
     const correctOption = q.options.find((o) => o.correct);
     return isCorrect ? "Richtig!" : `Leider falsch. Richtig wäre: ${correctOption.value}`;
   }
