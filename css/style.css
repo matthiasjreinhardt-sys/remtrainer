@@ -335,6 +335,8 @@ canvas.graph-canvas {
 
 .legend .above::before { background: rgba(59,130,246,0.6); }
 .legend .below::before { background: rgba(249,115,22,0.6); }
+.legend .curve-f::before { background: #e2e8f0; }
+.legend .curve-g::before { background: #fbbf24; }
 
 .mc-options {
   display: grid;

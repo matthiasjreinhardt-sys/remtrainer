@@ -271,7 +271,10 @@ function renderQuiz() {
     </div>
   `;
 
-  if (q.kind !== "code") {
+  if (q.kind === "graph" && q.drawMode === "between") {
+    const canvas = document.getElementById("quiz-canvas");
+    Game.Graph.drawBetween(canvas, q.funcObj.f, q.gFuncObj.f, q.domain, q.a, q.b);
+  } else if (q.kind !== "code") {
     const canvas = document.getElementById("quiz-canvas");
     Game.Graph.draw(canvas, q.funcObj, q.a, q.b);
   }
@@ -302,13 +305,18 @@ function renderIntegralQuestion(q) {
 }
 
 function renderGraphQuestion(q) {
-  return `
-    <p class="code-prompt">${escapeHtml(q.prompt)}</p>
-    <canvas class="graph-canvas" id="quiz-canvas"></canvas>
+  const legend =
+    q.legend !== undefined
+      ? q.legend
+      : `
     <div class="legend">
       <span class="above">Fläche oberhalb x-Achse (positiv)</span>
       <span class="below">Fläche unterhalb x-Achse (negativ)</span>
-    </div>
+    </div>`;
+  return `
+    <p class="code-prompt">${escapeHtml(q.prompt)}</p>
+    <canvas class="graph-canvas" id="quiz-canvas"></canvas>
+    ${legend}
   `;
 }
 
@@ -412,9 +420,14 @@ function answerQuestion(isCorrect, q) {
 }
 
 function buildFeedbackText(isCorrect, q) {
-  if (q.kind === "code" || q.kind === "graph") {
+  if (q.mode === "mc" && (q.kind === "code" || q.kind === "graph")) {
     const correctOption = q.options.find((o) => o.correct);
     return isCorrect ? "Richtig!" : `Leider falsch. Richtig wäre: ${correctOption.value}`;
+  }
+  if (q.kind === "graph") {
+    return isCorrect
+      ? `Richtig! ${formatNum(q.correctValue)} FE`
+      : `Leider falsch. Richtig wäre: ${formatNum(q.correctValue)} FE`;
   }
   return isCorrect
     ? `Richtig! ∫ = F(b) − F(a) = ${formatNum(q.correctValue)} FE`
