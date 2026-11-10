@@ -1,8 +1,10 @@
 // Spielmodul "Python-Listen" (Informatik 11): Listen erstellen und
-// indizieren, veraendern (append/pop/remove), durchlaufen mit for, und
-// weitere Werkzeuge (in, min/max/sum, Slicing, Verkettung). Bewusst OHNE
-// Sortieralgorithmen. Kuratierter Fragenpool wie bei den anderen
-// Python-Modulen, Auswahl und Antwortreihenfolge zufaellig.
+// indizieren, veraendern (append/pop/remove) und durchlaufen mit for.
+// Bewusst OHNE Sortieralgorithmen. Kuratierter Fragenpool wie bei den
+// anderen Python-Modulen, Auswahl und Antwortreihenfolge zufaellig.
+//
+// pop() wurde im Unterricht nicht behandelt - daher wird es direkt in der
+// Frage kurz erklaert (siehe "veraendern"-Pool), statt es vorauszusetzen.
 
 window.Game = window.Game || {};
 Game.modules = Game.modules || {};
@@ -11,7 +13,7 @@ Game.modules.pythonListen = {
   id: "pythonListen",
   title: "Informatik 11 - Python-Listen",
   subjectTrack: "informatik-11",
-  description: "Listen erstellen, verändern, durchlaufen und weitere Listen-Werkzeuge (ohne Sortieralgorithmen).",
+  description: "Listen erstellen, verändern und durchlaufen (ohne Sortieralgorithmen).",
   levels: [
     {
       id: "erstellen-indizieren",
@@ -127,7 +129,7 @@ Game.modules.pythonListen = {
           ],
         },
         {
-          prompt: "Was gibt dieser Code aus?",
+          prompt: "zahlen.pop() entfernt das letzte Element der Liste (und gibt es zurück). Was gibt dieser Code aus?",
           code: "zahlen = [1, 2, 3, 4]\nzahlen.pop()\nprint(zahlen)",
           options: [
             { value: "[1, 2, 3]", correct: true },
@@ -156,7 +158,7 @@ Game.modules.pythonListen = {
           ],
         },
         {
-          prompt: "Was gibt dieser Code aus?",
+          prompt: "liste.pop(i) entfernt das Element an Index i (und gibt es zurück) - hier also das erste Element. Was gibt dieser Code aus?",
           code: "liste = [10, 20, 30]\nliste.pop(0)\nprint(liste)",
           options: [
             { value: "[20, 30]", correct: true },
@@ -240,84 +242,6 @@ Game.modules.pythonListen = {
             { value: "2", correct: false },
             { value: "14", correct: false },
             { value: "5", correct: false },
-          ],
-        },
-      ],
-    },
-    {
-      id: "weitere-werkzeuge",
-      title: "Weitere Listen-Werkzeuge",
-      description: "in-Operator, min()/max()/sum(), Slicing, Verkettung mit +.",
-      questionCount: 6,
-      pool: [
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: "zahlen = [1, 2, 3, 4]\nprint(3 in zahlen)",
-          options: [
-            { value: "True", correct: true },
-            { value: "False", correct: false },
-            { value: "3", correct: false },
-            { value: "Fehler", correct: false },
-          ],
-        },
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: 'namen = ["Anna", "Ben"]\nprint("Cem" in namen)',
-          options: [
-            { value: "False", correct: true },
-            { value: "True", correct: false },
-            { value: "Fehler", correct: false },
-            { value: "Cem", correct: false },
-          ],
-        },
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: "zahlen = [4, 1, 9, 2]\nprint(max(zahlen))",
-          options: [
-            { value: "9", correct: true },
-            { value: "1", correct: false },
-            { value: "4", correct: false },
-            { value: "Fehler", correct: false },
-          ],
-        },
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: "zahlen = [4, 1, 9, 2]\nprint(min(zahlen))",
-          options: [
-            { value: "1", correct: true },
-            { value: "9", correct: false },
-            { value: "4", correct: false },
-            { value: "Fehler", correct: false },
-          ],
-        },
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: "zahlen = [1, 2, 3, 4, 5]\nprint(sum(zahlen))",
-          options: [
-            { value: "15", correct: true },
-            { value: "5", correct: false },
-            { value: "1", correct: false },
-            { value: "120", correct: false },
-          ],
-        },
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: "zahlen = [10, 20, 30, 40, 50]\nprint(zahlen[1:3])",
-          options: [
-            { value: "[20, 30]", correct: true },
-            { value: "[10, 20, 30]", correct: false },
-            { value: "[20, 30, 40]", correct: false },
-            { value: "[10, 20]", correct: false },
-          ],
-        },
-        {
-          prompt: "Was gibt dieser Code aus?",
-          code: "a = [1, 2]\nb = [3, 4]\nprint(a + b)",
-          options: [
-            { value: "[1, 2, 3, 4]", correct: true },
-            { value: "[4, 6]", correct: false },
-            { value: "[1, 2, 3, 4, 3, 4]", correct: false },
-            { value: "Fehler", correct: false },
           ],
         },
       ],
