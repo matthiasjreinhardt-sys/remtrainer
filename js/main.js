@@ -261,7 +261,7 @@ function renderQuiz() {
     </div>
     <div class="quiz-panel">
       ${q.kind === "code" ? renderCodeQuestion(q) : q.kind === "graph" ? renderGraphQuestion(q) : renderIntegralQuestion(q)}
-      ${q.mode === "mc" ? renderMcOptions(q) : renderNumericInput()}
+      ${q.mode === "mc" ? renderMcOptions(q) : renderNumericInput(q)}
       <div class="feedback" id="feedback"></div>
       <div class="quiz-actions">
         <button id="next-btn" disabled>${
@@ -366,10 +366,11 @@ function wireMcOptions(q) {
   });
 }
 
-function renderNumericInput() {
+function renderNumericInput(q) {
+  const placeholder = q && q.unit ? `Wert in ${q.unit}` : "Wert in FE";
   return `
     <div class="numeric-input-row">
-      <input type="text" id="numeric-answer" placeholder="Wert in FE" inputmode="decimal" />
+      <input type="text" id="numeric-answer" placeholder="${escapeHtml(placeholder)}" inputmode="decimal" />
       <button id="check-btn">Prüfen</button>
     </div>
   `;
@@ -428,6 +429,12 @@ function buildFeedbackText(isCorrect, q) {
     return isCorrect
       ? `Richtig! ${formatNum(q.correctValue)} FE`
       : `Leider falsch. Richtig wäre: ${formatNum(q.correctValue)} FE`;
+  }
+  if (q.kind === "code") {
+    const unitSuffix = q.unit ? ` ${q.unit}` : "";
+    return isCorrect
+      ? `Richtig! ${formatNum(q.correctValue)}${unitSuffix}`
+      : `Leider falsch. Richtig wäre: ${formatNum(q.correctValue)}${unitSuffix}`;
   }
   return isCorrect
     ? `Richtig! ∫ = F(b) − F(a) = ${formatNum(q.correctValue)} FE`
