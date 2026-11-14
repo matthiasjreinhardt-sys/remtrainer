@@ -367,7 +367,10 @@ function wireMcOptions(q) {
 }
 
 function renderNumericInput(q) {
-  const placeholder = q && q.unit ? `Wert in ${q.unit}` : "Wert in FE";
+  let placeholder = "Wert in FE";
+  if (q && q.unit !== undefined) {
+    placeholder = q.unit ? `Wert in ${q.unit}` : "Wert (Dezimalzahl)";
+  }
   return `
     <div class="numeric-input-row">
       <input type="text" id="numeric-answer" placeholder="${escapeHtml(placeholder)}" inputmode="decimal" />
@@ -426,9 +429,10 @@ function buildFeedbackText(isCorrect, q) {
     return isCorrect ? "Richtig!" : `Leider falsch. Richtig wäre: ${correctOption.value}`;
   }
   if (q.kind === "graph") {
+    const unitSuffix = q.unit !== undefined ? (q.unit ? ` ${q.unit}` : "") : " FE";
     return isCorrect
-      ? `Richtig! ${formatNum(q.correctValue)} FE`
-      : `Leider falsch. Richtig wäre: ${formatNum(q.correctValue)} FE`;
+      ? `Richtig! ${formatNum(q.correctValue)}${unitSuffix}`
+      : `Leider falsch. Richtig wäre: ${formatNum(q.correctValue)}${unitSuffix}`;
   }
   if (q.kind === "code") {
     const unitSuffix = q.unit ? ` ${q.unit}` : "";
